@@ -9,6 +9,8 @@ on:
       - main
       - dev
       - sit
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 name: AWS ECR push
 
@@ -53,6 +55,10 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST .
         echo "Pushing image to ECR..."
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+        if: ${{ github.event_name == 'pull_request' ||  github.event_name == 'push'}}
+        run: |
+        echo "ONLY Image Tag: $IMAGE_TAG will be pushed to preserve the latest"
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
      
     
