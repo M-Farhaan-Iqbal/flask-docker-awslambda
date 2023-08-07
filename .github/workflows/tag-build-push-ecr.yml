@@ -45,11 +45,12 @@ jobs:
         echo "building images..."
         docker build -t flask-docker-awslambda .
         cd ./API-Testing
-        docker-compouse up -d
+        docker-compose up -d
         pip install requirements-test.txt
         python test_script.py
 
   deploy:
+    needs: test-app    
     name: Deploy
     runs-on: ubuntu-latest
 
