@@ -3,12 +3,14 @@ import json
 import sys
 
 def run_tests():
+    failed_tests = []
+
     try:
         with open('api_tests.json', 'r') as file:
             api_tests = json.load(file)
     except Exception as e:
         print("Error loading API tests:", e)
-        return
+        return failed_tests
     
     for test in api_tests:
         api_request = test['data']
@@ -24,6 +26,7 @@ def run_tests():
             print(f"Test '{test['name']}' passed successfully!")
         except requests.RequestException as e:
             print(f"Request error for test '{test['name']}':", e)
+            failed_tests.append(test['name'])
         except AssertionError as e:
             print(f"Test '{test['name']}' failed:")
             print("Expected response:")
@@ -33,6 +36,9 @@ def run_tests():
                 'statusCode': response.status_code,
                 'body': response.text.strip()
             }, indent=4))
+            failed_tests.append(test['name'])
+
+    return failed_tests
 
 
 if __name__ == "__main__":

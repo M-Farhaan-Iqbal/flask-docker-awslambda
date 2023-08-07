@@ -44,6 +44,10 @@ jobs:
       run: |
         echo "building images..."
         docker build -t flask-docker-awslambda .
+
+    - name: run the test env and test
+      id: run-compose
+      run: |
         cd ./API-Testing
         docker-compose up -d
         pip install -r requirements-test.txt
