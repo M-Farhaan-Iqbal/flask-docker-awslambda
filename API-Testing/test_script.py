@@ -1,5 +1,6 @@
 import requests
 import json
+import sys
 
 def run_tests():
     try:
@@ -33,5 +34,10 @@ def run_tests():
                 'body': response.text.strip()
             }, indent=4))
 
+
 if __name__ == "__main__":
-    run_tests()
+    failed_tests = run_tests()
+
+    if failed_tests:
+        print("Failed tests:", failed_tests)
+        sys.exit(1)
