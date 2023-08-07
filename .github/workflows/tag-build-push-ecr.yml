@@ -25,7 +25,7 @@ name: AWS ECR push
 jobs:
 
   test-app:
-    name: Deploy
+    name: Test App
     runs-on: ubuntu-latest
 
     steps:
@@ -44,6 +44,10 @@ jobs:
       run: |
         echo "building images..."
         docker build -t flask-docker-awslambda .
+        cd ./API-Testing
+        docker-compouse up -d
+        pip install requirements-test.txt
+        python test_script.py
 
   deploy:
     name: Deploy
