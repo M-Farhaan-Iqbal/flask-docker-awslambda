@@ -32,12 +32,12 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Generate Docker image tag
-      uses: boost/docker-image-tag-generator@v1.0.0
-      id: docker-image-tagger
-      with:
-        branch: ${{github.head_ref}}
-        sha: ${{github.event.pull_request.head.sha}}
+    - name: Set up environment variables
+      run: |
+        echo "BRANCH=${{ github.ref }}"
+        echo "SHA_SHORT=$(echo ${{ github.sha }} | cut -c1-7)"
+        echo "IMAGE_TAG=${BRANCH}_${SHA_SHORT}"
+        echo "::set-env name=IMAGE_TAG::${BRANCH}_${SHA_SHORT}"
 
     - name: Build, tag, and push the image to Amazon ECR
       id: build-image
@@ -45,7 +45,6 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
         IMAGE_TAG_latest: latest
-        IMAGE_TAG: ${{steps.docker-image-tagger.outputs.docker-image-tag}}
       run: |
         echo "IMAGE TAG is $IMAGE_TAG"
         # Build a docker container and push it to ECR 
