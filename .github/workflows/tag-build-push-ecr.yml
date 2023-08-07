@@ -46,7 +46,7 @@ jobs:
         docker build -t flask-docker-awslambda .
         cd ./API-Testing
         docker-compose up -d
-        pip install requirements-test.txt
+        pip install -r requirements-test.txt
         python test_script.py
 
   deploy:
