@@ -15,6 +15,40 @@
             "statusCode": "200",
             "body": "{\"statusCode\": \"404\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"29\"}, \"isBase64Encoded\": false, \"body\": \"{\\\"message\\\":\\\"Item not found\\\"}\\n\"}"
         }
+    },
+    {
+        "name": "Get Item API Test",
+        "path": "/items",
+        "data": {
+            "httpMethod": "GET",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "queryStringParameters": {},
+            "path": "/items",
+            "body": "{}"
+        },
+        "expected_response": {
+            "statusCode": "200",
+            "body": "{\"statusCode\": \"200\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"3\"}, \"isBase64Encoded\": false, \"body\": \"[]\\n\"}"
+        }
+    },
+    {
+        "name": "Get Item API Test purposefully failing ",
+        "path": "/items",
+        "data": {
+            "httpMethod": "GET",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "queryStringParameters": {},
+            "path": "/items",
+            "body": "{}"
+        },
+        "expected_response": {
+            "statusCode": "200",
+            "body": "{\"statusCode\": \"200\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"3\"}, \"isBase64Encoded\": false, \"body\": \"[failed on purpose]\\n\"}"
+        }
     }
 ]
 
