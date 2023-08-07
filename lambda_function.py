@@ -9,6 +9,10 @@ app = Flask(__name__)
 def hello():
     return jsonify(message='Hello from AWS Lambda using Python Flask in Docker!')
 
+@app.route('/health')
+def hello():
+    return jsonify(message='health okay')
+
 @app.route('/echo', methods=['POST'])
 def echo():
     data = request.get_json()
