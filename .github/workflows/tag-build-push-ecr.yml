@@ -56,9 +56,9 @@ jobs:
         echo "Pushing image to ECR..."
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-        if: ${{ github.event_name == 'pull_request' ||  github.event_name == 'push'}}
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         run: |
-        echo "ONLY Image Tag: $IMAGE_TAG will be pushed to preserve the latest"
+        echo "latet Image Tag: $IMAGE_TAG will be pushed as automatically triggered"
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
      
     
