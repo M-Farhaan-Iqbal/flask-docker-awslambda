@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Get Item API Test",
+        "path": "/items",
+        "data": {
+            "httpMethod": "GET",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "queryStringParameters": {},
+            "path": "/items/1",
+            "body": "{}"
+        },
+        "expected_response": {
+            "statusCode": "200",
+            "body": "{\"statusCode\": \"404\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"29\"}, \"isBase64Encoded\": false, \"body\": \"{\\\"message\\\":\\\"Item not found\\\"}\\n\"}"
+        }
+    }
+]
+

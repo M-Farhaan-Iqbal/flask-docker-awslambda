@@ -23,6 +23,28 @@ on:
 name: AWS ECR push
 
 jobs:
+
+  test-app:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      if: github.event_name == 'push' || github.event_name == 'pull_request'
+      uses: actions/checkout@v3
+      
+    - name: Checkout if dispatch
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.refToBuild }}
+
+    - name: Build the image
+      id: build-image
+      run: |
+        echo "building images..."
+        docker build -t flask-docker-awslambda .
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
@@ -67,7 +89,7 @@ jobs:
         echo "Image Tag: $IMAGE_TAG"
         echo "Image Tag Latest: $IMAGE_TAG_LATEST"
 
-    - name: Build, tag, and push the image to Amazon ECR
+    - name: Build the image
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -75,10 +97,18 @@ jobs:
       run: |
         echo "building images..."
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST .
-        echo "Pushing image to ECR..."
+
+
+
+    - name: push the tagged image to Amazon ECR
+      id: push-tagged
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
+      run: |
+        echo "Tagged Image Tag: $IMAGE_TAG will be pushed as automatically triggered"
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        
+
     - name: push the latest image to Amazon ECR
       id: push-latest
       env:
@@ -86,7 +116,8 @@ jobs:
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
-        echo "latet Image Tag: $IMAGE_TAG will be pushed as automatically triggered"
+        echo "latest Image Tag: $IMAGE_TAG_LATEST will be pushed as automatically triggered "
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
      
     
