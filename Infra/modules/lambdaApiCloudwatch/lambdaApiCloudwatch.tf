@@ -107,12 +107,9 @@ output "db_instance_port" {
 }
 
 
-# Create AWS Lambda function using the Docker image from ECR
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "my-lambda-function"
   role          = aws_iam_role.lambda_role.arn
-  handler       = "app.lambda_handler"
-  runtime       = "provided.al2"
   
   image_uri = "204952858947.dkr.ecr.us-east-1.amazonaws.com/flask-app-crud:dev_latest"
   
@@ -126,3 +123,4 @@ resource "aws_lambda_function" "my_lambda_function" {
     }
   }
 }
+
