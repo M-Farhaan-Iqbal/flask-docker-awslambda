@@ -38,7 +38,7 @@ jobs:
         id: check_changes
         run: |
           # Get the list of modified files in the last commit
-          changed_files=$(git diff --name-only HEAD^ HEAD)
+          changed_files=$(git diff --name-only $(git rev-parse HEAD~1) HEAD)
           
           # Check if any modified file is in the specific directory
           if echo "$changed_files" | grep -E "^./App" >/dev/null; then
@@ -51,14 +51,23 @@ jobs:
 
 
   test-app:
+    needs: check_appcode_changes
     name: Test App
     runs-on: ubuntu-latest
 
+    
     steps:
     - name: Check Code Changes  
       run: |
         echo "needs.check_appcode_changes.outputs.output1"
         echo ${{needs.check_appcode_changes.outputs.output1}}
+        if [ "${{needs.check_appcode_changes.outputs.output1}}" = "true" ]; then
+        echo "There are modified files in the specified directory."
+        # Add your steps to handle the case when there are modified files
+        else
+          echo "No modified files in the specified directory. Skipping the rest of the job."
+          exit 0  # This will exit the job successfully
+        fi
 
     - name: Checkout
       if: github.event_name == 'push' || github.event_name == 'pull_request'
