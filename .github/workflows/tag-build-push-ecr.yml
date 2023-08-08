@@ -38,7 +38,7 @@ jobs:
         id: check_changes
         run: |
           # Get the list of modified files in the last commit
-          changed_files=$(git diff --name-only $(git rev-parse HEAD~1) HEAD)
+          changed_files=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | xargs)
           
           # Check if any modified file is in the specific directory
           if echo "$changed_files" | grep -E "^./App" >/dev/null; then
