@@ -53,9 +53,9 @@ jobs:
         pip install -r requirements-test.txt
         python test_script.py
 
-  terraform:
+  terraform-build-ecr:
     needs: test-app
-    name: 'Terraform'
+    name: 'Terraform build ecr'
     runs-on: ubuntu-latest
     # environment: production
 
@@ -92,7 +92,7 @@ jobs:
         terraform apply -auto-approve
 
   deploy-image:
-    needs: terraform    
+    needs: terraform-build-ecr    
     name: Deploy image
     runs-on: ubuntu-latest
 
