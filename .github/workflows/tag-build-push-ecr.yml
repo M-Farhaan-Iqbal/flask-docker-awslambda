@@ -88,8 +88,8 @@ jobs:
         cd ./Infra
         terraform init
         terraform fmt -check
-        terraform plan -target=module.ecr
-        terraform apply -auto-approve
+        terraform plan -target="module.ecr"
+        terraform apply -target="module.ecr" -auto-approve
 
   deploy-image:
     needs: terraform-build-ecr    
