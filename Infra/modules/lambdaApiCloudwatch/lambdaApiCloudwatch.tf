@@ -59,14 +59,16 @@ resource "aws_db_instance" "postgres_db" {
 
   # The RDS instance class.
   # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
-  instance_class       = local.aws_db_instance__instance_class__free_tier
+  instance_class       = "db.t3.micro"
 
   # The allocated storage in gibibytes.
-  allocated_storage    = local.aws_db_instance__allocated_storage__free_tier
+  allocated_storage    = 20
 
   # The database engine name such as "postgres", "mysql", "aurora", etc.
   # https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html
   engine               = "postgres"
+  engine_version = "15.3"
+
 
   # The master account username and password.
   # Note that these settings may show up in logs,
@@ -82,24 +84,6 @@ resource "aws_db_instance" "postgres_db" {
 
   # We like to use the database with public tools such as DB admin apps.
   publicly_accessible = "true"
-
-  # We like performance insights, which help us optimize the data use.
-  performance_insights_enabled = "true"
-
-  # We like to have the postgres_db database update to the current version.
-  allow_major_version_upgrade = "true"
-
-  # We like backup retention for as long as possible.
-  backup_retention_period = "35"
-
-  # Backup window time in UTC is in the middle of the night in the United States.
-  backup_window = "08:00-09:00"
-
-  # We prefer to preserve the backups if the database is accidentally deleted.
-  delete_automated_backups = "false"
-
-  # Maintenance window is after backup window, and on Sunday, and in the middle of the night.
-  maintenance_window = "sun:09:00-sun:10:00"
 
 }
 output "db_instance_endpoint" {
