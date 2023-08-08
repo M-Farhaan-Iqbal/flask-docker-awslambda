@@ -114,7 +114,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   handler       = "app.lambda_handler"
   runtime       = "provided.al2"
   
-  image_uri = "204952858947.dkr.ecr.us-east-1.amazonaws.com/flask-app-crud:latest"
+  image_uri = "204952858947.dkr.ecr.us-east-1.amazonaws.com/flask-app-crud:dev_latest"
   
   environment {
     variables = {
