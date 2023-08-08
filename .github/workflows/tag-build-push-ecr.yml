@@ -55,8 +55,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-        
-    - run: echo ${{needs.check_appcode_changes.outputs.output1}}
+    - name: Check Code Changes  
+      run: |
+        echo "needs.check_appcode_changes.outputs.output1"
+        echo ${{needs.check_appcode_changes.outputs.output1}}
+
     - name: Checkout
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       uses: actions/checkout@v3
