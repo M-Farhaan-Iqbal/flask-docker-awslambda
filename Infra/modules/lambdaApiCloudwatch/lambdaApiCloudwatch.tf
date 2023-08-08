@@ -39,23 +39,23 @@ locals {
   aws_db_instance__allocated_storage__free_tier = "20"
 }
 
-variable "aws_db_instance__demo__username" {
+variable "aws_db_instance__postgres_db__username" {
   default = "postgres"
 }
 
-variable "aws_db_instance__demo__password" {
+variable "aws_db_instance__postgres_db__password" {
   default = "postgres"
 }
 
-resource "aws_db_instance" "demo" {
+resource "aws_db_instance" "postgres_db" {
 
   # The name of the RDS instance.
   # Letters and hyphens are allowed; underscores are not.
   # Terraform default is  a random, unique identifier.
-  identifier = "demo-rds"
+  identifier = "postgres_db-rds"
 
   # The name of the database to create when the DB instance is created.
-  name = "demo_db"
+  name = "postgres_db_db"
 
   # The RDS instance class.
   # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
@@ -77,8 +77,8 @@ resource "aws_db_instance" "demo" {
   #
   # These variables are set in the file .env.auto.tfvars
   # and you can see the example ffile .env.example.auto.tfvars.
-  username             = var.aws_db_instance__demo__username
-  password             = var.aws_db_instance__demo__password
+  username             = var.aws_db_instance__postgres_db__username
+  password             = var.aws_db_instance__postgres_db__password
 
   # We like to use the database with public tools such as DB admin apps.
   publicly_accessible = "true"
@@ -86,7 +86,7 @@ resource "aws_db_instance" "demo" {
   # We like performance insights, which help us optimize the data use.
   performance_insights_enabled = "true"
 
-  # We like to have the demo database update to the current version.
+  # We like to have the postgres_db database update to the current version.
   allow_major_version_upgrade = "true"
 
   # We like backup retention for as long as possible.
@@ -102,6 +102,26 @@ resource "aws_db_instance" "demo" {
   maintenance_window = "sun:09:00-sun:10:00"
 
 }
+output "db_instance_endpoint" {
+  value       = aws_db_instance.postgres_db.endpoint
+  description = "The endpoint URL of the RDS instance"
+}
+
+output "db_instance_username" {
+  value       = aws_db_instance.postgres_db.username
+  description = "The username of the RDS instance"
+}
+
+output "db_instance_name" {
+  value       = aws_db_instance.postgres_db.name
+  description = "The name of the RDS database"
+}
+
+output "db_instance_port" {
+  value       = aws_db_instance.postgres_db.port
+  description = "The port on which the RDS instance is listening"
+}
+
 
 # Create AWS Lambda function using the Docker image from ECR
 resource "aws_lambda_function" "my_lambda_function" {
@@ -110,7 +130,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   handler       = "app.lambda_handler"
   runtime       = "provided.al2"
   
-  image_uri = "${aws_ecr_repository.flask-app-crud.repository_url}:latest"
+  image_uri = "204952858947.dkr.ecr.us-east-1.amazonaws.com/flask-app-crud:latest"
   
   environment {
     variables = {
