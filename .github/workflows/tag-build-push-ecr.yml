@@ -24,11 +24,39 @@ name: AWS ECR push
 
 jobs:
 
+  
+  check_appcode_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.check_changes.outputs.DirectoryChanges }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Check for directory changes
+        id: check_changes
+        run: |
+          # Get the list of modified files in the last commit
+          changed_files=$(git diff --name-only HEAD^ HEAD)
+          
+          # Check if any modified file is in the specific directory
+          if echo "$changed_files" | grep -E "^./App" >/dev/null; then
+            echo "There are modified application files in the commit."
+            echo "DirectoryChanges=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No modified files application files in the commit."
+            echo "DirectoryChanges=false" >> "$GITHUB_OUTPUT"
+          fi
+
+
   test-app:
     name: Test App
     runs-on: ubuntu-latest
 
     steps:
+        
+    - run: echo ${{needs.check_appcode_changes.outputs.output1}}
     - name: Checkout
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       uses: actions/checkout@v3
