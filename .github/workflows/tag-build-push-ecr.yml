@@ -43,7 +43,7 @@ jobs:
       id: build-image
       run: |
         echo "building images..."
-        docker build -t flask-docker-awslambda .
+        docker build -t flask-docker-awslambda ./App/
 
     - name: run the test env and test
       id: run-compose
@@ -143,7 +143,7 @@ jobs:
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
       run: |
         echo "building images..."
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./App/
     - name: push the tagged image to Amazon ECR
       id: push-tagged
       env:
@@ -161,7 +161,7 @@ jobs:
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
         echo "latest Image Tag: $IMAGE_TAG_LATEST will be pushed as automatically triggered "
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST ./App/
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
      
     
