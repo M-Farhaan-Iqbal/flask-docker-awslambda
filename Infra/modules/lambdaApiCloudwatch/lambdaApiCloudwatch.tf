@@ -139,8 +139,6 @@ resource "aws_lambda_function" "my_lambda_function" {
       PGDATABASE = aws_db_instance.postgres_db.name
       PGUSER     = aws_db_instance.postgres_db.username
       PGPASSWORD = aws_db_instance.postgres_db.password
-
-      DATABASE_URL="postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGHOST}/${PGDATABASE}}"
     }
   }
 }
