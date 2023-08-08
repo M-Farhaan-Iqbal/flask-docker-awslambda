@@ -8,6 +8,14 @@ import sys
 app = Flask(__name__)
 
 
+    #   PGHOST     = aws_db_instance.postgres_db.address
+    #   PGPORT     = aws_db_instance.postgres_db.port
+    #   PGDATABASE = aws_db_instance.postgres_db.name
+    #   PGUSER     = aws_db_instance.postgres_db.username
+    #   PGPASSWORD = aws_db_instance.postgres_db.password
+# DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+dburl = "postgresql://"+ os.environ.get('PGUSER') + ":" + os.environ.get('PGPASSWORD') + "@" + os.environ.get('PGHOST') +  "/" + os.environ.get('PGPORT') + "/postgres"
+
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 
