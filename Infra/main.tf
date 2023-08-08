@@ -26,3 +26,18 @@ module "tf-state" {
   source      = "./modules/tf-state"
   bucket_name = "cc-tf-state-backend-ci-cd"
 }
+
+module "ecr-infra" {
+  source = "./modules/ecr"
+}
+
+module "lambda-infra" {
+  source = "./modules/lambdaApiCloudwatch"
+}
+
+
+
+
+
+
+

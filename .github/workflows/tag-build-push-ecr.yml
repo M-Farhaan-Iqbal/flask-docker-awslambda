@@ -53,9 +53,47 @@ jobs:
         pip install -r requirements-test.txt
         python test_script.py
 
-  deploy:
-    needs: test-app    
-    name: Deploy
+  terraform:
+    needs: test-app
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    # environment: production
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout
+      if: github.event_name == 'push' || github.event_name == 'pull_request'
+      uses: actions/checkout@v3
+      
+    - name: Checkout if dispatch
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.refToBuild }}
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: |
+        cd ./Infra
+        terraform init
+        terraform fmt -check
+        terraform plan
+        terraform apply -auto-approve
+
+  deploy-image:
+    needs: terraform    
+    name: Deploy image
     runs-on: ubuntu-latest
 
     steps:
@@ -106,9 +144,6 @@ jobs:
       run: |
         echo "building images..."
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-
-
-
     - name: push the tagged image to Amazon ECR
       id: push-tagged
       env:

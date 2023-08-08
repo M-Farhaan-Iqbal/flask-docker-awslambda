@@ -34,7 +34,7 @@
         }
     },
     {
-        "name": "Get Item API Test purposefully failing ",
+        "name": "Get Item API Test ",
         "path": "/items",
         "data": {
             "httpMethod": "GET",
@@ -47,7 +47,7 @@
         },
         "expected_response": {
             "statusCode": "200",
-            "body": "{\"statusCode\": \"200\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"3\"}, \"isBase64Encoded\": false, \"body\": \"[failed on purpose]\\n\"}"
+            "body": "{\"statusCode\": \"200\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"3\"}, \"isBase64Encoded\": false, \"body\": \"[]\\n\"}"
         }
     }
 ]
