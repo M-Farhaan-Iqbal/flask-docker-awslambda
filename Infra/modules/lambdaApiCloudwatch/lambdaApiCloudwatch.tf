@@ -52,7 +52,7 @@ resource "aws_db_instance" "postgres_db" {
   # The name of the RDS instance.
   # Letters and hyphens are allowed; underscores are not.
   # Terraform default is  a random, unique identifier.
-  identifier = "postgres_db-rds"
+  identifier = "postgres_db_rds"
 
   # The name of the database to create when the DB instance is created.
   name = "postgres_db_db"
