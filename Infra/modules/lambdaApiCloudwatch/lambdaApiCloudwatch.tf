@@ -109,8 +109,6 @@ output "db_instance_port" {
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "my-lambda-function"
   role          = aws_iam_role.lambda_role.arn
-  handler       = "lambda_function.lambda_handler"
-  runtime       = "provided.al2"
 
   image_uri = "204952858947.dkr.ecr.us-east-1.amazonaws.com/flask-app-crud:latest"
   package_type = "Image"
