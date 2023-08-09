@@ -53,7 +53,7 @@ jobs:
 
 
   test-app:
-    if: ${{needs.check_appcode_changes.outputs.codeChangesfile}} == "true"
+    if: needs.check_appcode_changes.outputs.codeChangesfile == 'true'
     needs: check_appcode_changes
     name: Test App
     runs-on: ubuntu-latest
