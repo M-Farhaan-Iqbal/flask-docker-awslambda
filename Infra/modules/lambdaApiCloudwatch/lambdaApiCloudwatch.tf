@@ -32,8 +32,6 @@ resource "aws_iam_policy_attachment" "lambda_policy_attachment" {
 # AWS database instance
 #
 ##
-
-# Define local varibles that notate what the AWS free tier can do.
 locals {
   aws_db_instance__instance_class__free_tier = "db.t2.micro"
   aws_db_instance__allocated_storage__free_tier = "20"
@@ -107,11 +105,16 @@ output "db_instance_port" {
 }
 
 
+# Create AWS Lambda function using the Docker image from ECR
 resource "aws_lambda_function" "my_lambda_function" {
   function_name = "my-lambda-function"
   role          = aws_iam_role.lambda_role.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "provided.al2"
   
-  image_uri = "204952858947.dkr.ecr.us-east-1.amazonaws.com/flask-app-crud:dev_latest"
+  bucket = join("-", [var.prefix, "bucket"])
+  image_uri = "204952858947.dkr.ecr.us-east-1.amazonaws.com/flask-app-crud:latest"
+  package_type = "Image"
   
   environment {
     variables = {
@@ -123,4 +126,5 @@ resource "aws_lambda_function" "my_lambda_function" {
     }
   }
 }
+
 

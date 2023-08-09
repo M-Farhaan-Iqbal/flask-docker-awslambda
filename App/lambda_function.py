@@ -2,21 +2,22 @@ import awsgi
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
+import logging
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 import sys
 
 app = Flask(__name__)
 
-
-    #   PGHOST     = aws_db_instance.postgres_db.address
-    #   PGPORT     = aws_db_instance.postgres_db.port
-    #   PGDATABASE = aws_db_instance.postgres_db.name
-    #   PGUSER     = aws_db_instance.postgres_db.username
-    #   PGPASSWORD = aws_db_instance.postgres_db.password
 # DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-dburl = "postgresql://"+ os.environ.get('PGUSER') + ":" + os.environ.get('PGPASSWORD') + "@" + os.environ.get('PGHOST') +  "/" + os.environ.get('PGPORT') + "/postgres"
+dburl = "postgresql://"+ os.environ.get('PGUSER') + ":" + os.environ.get('PGPASSWORD') + "@" + os.environ.get('PGHOST') +  ":" + os.environ.get('PGPORT') + "/" +  os.environ.get('PGDATABASE')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+logger.info('## Connection details to db : %s', dburl)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = dburl
 db = SQLAlchemy(app)
 
 class Item(db.Model):
@@ -76,6 +77,7 @@ def helloroot():
 
 @app.route('/health')
 def hello():
+    logger.info('## API for health check initiated ')
     return jsonify(message='health okay')
 
 @app.route('/echo', methods=['POST'])
@@ -85,4 +87,7 @@ def echo():
 
 
 def lambda_handler(event, context):
-    return awsgi.response(app, event, context)
+    logger.info('## API event : %s', event)
+    responseApi = awsgi.response(app, event, context)
+    logger.info('## API response : %s', responseApi)
+    return responseApi

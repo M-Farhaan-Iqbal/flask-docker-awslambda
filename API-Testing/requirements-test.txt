@@ -1,8 +1,5 @@
 pytest==6.2.5
 requests
-aws-wsgi
 flask
 psycopg2-binary
 Flask-SQLAlchemy
-mysqlclient
-pymysql
