@@ -89,6 +89,7 @@ jobs:
 
   terraform-build-ecr:
 
+    if: ${{ always() }}
     needs: [check_appcode_changes,test-app]
     name: 'Terraform build ecr'
     runs-on: ubuntu-latest
