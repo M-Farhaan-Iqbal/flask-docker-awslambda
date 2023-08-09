@@ -201,6 +201,7 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
 
   terraform-build-lambda:
+    if : ${{ always() }}
     needs: deploy-image
     name: 'Terraform build lambda'
     runs-on: ubuntu-latest
