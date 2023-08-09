@@ -28,7 +28,7 @@ jobs:
   check_appcode_changes:
     runs-on: ubuntu-latest
     outputs:
-      output1: ${{ steps.check_changes.outputs.DirectoryChanges }}
+      codeChangesfile: ${{ steps.check_changes.outputs.DirectoryChanges }}
     
     steps:
       - name: Checkout code
@@ -41,7 +41,7 @@ jobs:
           changed_files=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | xargs)
           
           # Check if any modified file is in the specific directory
-          if echo "$changed_files" | grep -E "^./App" >/dev/null; then
+          if echo "$changed_files" | grep -E "^\.\/(App|API)" >/dev/null; then
             echo "There are modified application files in the commit."
             echo "DirectoryChanges=true" >> "$GITHUB_OUTPUT"
           else
@@ -57,18 +57,6 @@ jobs:
 
     
     steps:
-    - name: Check Code Changes  
-      run: |
-        echo "needs.check_appcode_changes.outputs.output1"
-        echo ${{needs.check_appcode_changes.outputs.output1}}
-        if [ "${{needs.check_appcode_changes.outputs.output1}}" = "true" ]; then
-        echo "There are modified files in the specified directory."
-        # Add your steps to handle the case when there are modified files
-        else
-          echo "No modified files in the specified directory. Skipping the rest of the job."
-          exit 0  # This will exit the job successfully
-        fi
-
     - name: Checkout
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       uses: actions/checkout@v3
@@ -79,19 +67,25 @@ jobs:
       with:
         ref: ${{ inputs.refToBuild }}
 
+
     - name: Build the image
       id: build-image
       run: |
-        echo "building images..."
-        docker build -t flask-docker-awslambda ./App/
+        if [ "${{needs.check_appcode_changes.outputs.codeChangesfile}}" = "true" ]; then
+          echo "building images..."
+          docker build -t flask-docker-awslambda ./App/
+        fi
 
     - name: run the test env and test
       id: run-compose
       run: |
-        cd ./API-Testing
-        docker-compose up -d
-        pip install -r requirements-test.txt
-        python test_script.py
+        if [ "${{needs.check_appcode_changes.outputs.codeChangesfile}}" = "true" ]; then
+          echo "testing built image..."
+          cd ./API-Testing
+          docker-compose up -d
+          pip install -r requirements-test.txt
+          python test_script.py
+        fi
 
   terraform-build-ecr:
     needs: test-app
