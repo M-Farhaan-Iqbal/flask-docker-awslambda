@@ -88,7 +88,8 @@ jobs:
         
 
   terraform-build-ecr:
-    needs: test-app
+
+    needs: [check_appcode_changes,test-app]
     name: 'Terraform build ecr'
     runs-on: ubuntu-latest
     # environment: production
