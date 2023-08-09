@@ -12,6 +12,7 @@ import sys
 
 app = Flask(__name__)
 
+# sample of db connection
 # DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
 dburl = "postgresql://"+ os.environ.get('PGUSER') + ":" + os.environ.get('PGPASSWORD') + "@" + os.environ.get('PGHOST') +  ":" + os.environ.get('PGPORT') + "/" +  os.environ.get('PGDATABASE')
 
