@@ -125,11 +125,10 @@ jobs:
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: |
-        cd ./terraform
-        terraform init
-        terraform fmt -check
-        terraform plan  -var="docker_image_tag=none"  -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
-        terraform apply -var="docker_image_tag=none" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" -auto-approve
+        terraform -chdir="./terraform" init
+        terraform -chdir="./terraform" fmt -check
+        terraform -chdir="./terraform" plan  -var="docker_image_tag=none"  -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
+        terraform -chdir="./terraform" apply -var="docker_image_tag=none" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" -auto-approve
 
   deploy-image:
     needs: terraform-build-ecr 
@@ -231,19 +230,19 @@ jobs:
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
         
-        terraform init
-        terraform fmt -check
-        terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
-        terraform apply -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+        terraform -chdir="./terraform" init
+        terraform -chdir="./terraform" fmt -check
+        terraform -chdir="./terraform" plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
+        terraform -chdir="./terraform" apply -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
       
     - name: Terraform dispatch apply
       if: github.event_name == 'workflow_dispatch'
       run: |
         
-        terraform init
-        terraform fmt -check
-        terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
-        terraform apply -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+        terraform -chdir="./terraform" init
+        terraform -chdir="./terraform" fmt -check
+        terraform -chdir="./terraform" plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
+        terraform -chdir="./terraform" apply -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
 
 
     
