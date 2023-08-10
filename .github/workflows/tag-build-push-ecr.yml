@@ -127,7 +127,7 @@ jobs:
       run: |
         echo $(pwd)
         echo $(ls -la)
-        sed -i 's/postgres_db"/postgres_db_${GITHUB_REF##*/}"/' /terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf 
+        sed -i 's/postgres_db"/&_${GITHUB_REF##*/}"/' /terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf 
         terraform -chdir="./terraform" init
         terraform -chdir="./terraform" fmt -check
         terraform -chdir="./terraform" plan  -var="docker_image_tag=none"  -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
@@ -243,7 +243,7 @@ jobs:
       run: |
         echo $(pwd)
         echo $(ls -la)
-        sed -i 's/postgres_db"/postgres_db_${GITHUB_REF##*/}"/' /terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf 
+        sed -i 's/postgres_db"/&_${GITHUB_REF##*/}"/' /terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf 
         terraform -chdir="./terraform" init
         terraform -chdir="./terraform" fmt -check
         terraform -chdir="./terraform" plan -var="docker_image_tag=latest_${GITHUB_REF##*/}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
@@ -254,7 +254,7 @@ jobs:
       run: |
         echo $(pwd)
         echo $(ls -la)
-        sed -i 's/postgres_db"/postgres_db_${GITHUB_REF##*/}"/' /terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf          
+        sed -i 's/postgres_db"/&_${GITHUB_REF##*/}"/' /terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf          
         terraform -chdir="./terraform" init
         terraform -chdir="./terraform" fmt -check
         terraform -chdir="./terraform" plan -var="docker_image_tag=${GITHUB_REF##*/}_$FIRST_7_CHARS" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
