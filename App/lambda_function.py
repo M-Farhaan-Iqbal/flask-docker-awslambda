@@ -13,7 +13,7 @@ import sys
 app = Flask(__name__)
 
 # sample of db connection
-# test sit
+# test sit prod
 # DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
 
 # rebuilding from environment variables
