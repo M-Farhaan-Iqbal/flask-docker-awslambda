@@ -124,14 +124,10 @@ jobs:
     - name: rename resources
       run: |
         github_ref="${GITHUB_REF##*/}"
-
-        sed -i -e "s/\"my_lambda_function\"/\"my_lambda_function_${github_ref}\"/" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-
-        sed -i -e "s/postgres_db\"/&_${github_ref}\"/" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        
-        sed -i -e "s/\"lambda_log_group\"/\"lambda_log_group_${github_ref}\"/" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        
-        sed -i -e "s/\.postgres_db\./.postgres_db_${github_ref}\./" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 'smy_lambda_function/my_lambda_function_${github_ref}g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 'slambda_log_group/lambda_log_group_${github_ref}g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 's.postgres_db./.postgres_db${github_ref}.g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 's"postgres_db"/"postgres_db_${github_ref}"g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: |
@@ -248,13 +244,10 @@ jobs:
       run: |
         github_ref="${GITHUB_REF##*/}"
 
-        sed -i -e "s/\"my_lambda_function\"/\"my_lambda_function_${github_ref}\"/" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-
-        sed -i -e "s/postgres_db\"/&_${github_ref}\"/" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        
-        sed -i -e "s/\"lambda_log_group\"/\"lambda_log_group_${github_ref}\"/" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        
-        sed -i -e "s/\.postgres_db\./.postgres_db_${github_ref}\./" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 'smy_lambda_function/my_lambda_function_${github_ref}g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 'slambda_log_group/lambda_log_group_${github_ref}g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 's.postgres_db./.postgres_db${github_ref}.g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 's"postgres_db"/"postgres_db_${github_ref}"g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
 
     - name: Terraform normal apply
       if: github.event_name == 'push' || github.event_name == 'pull_request'
