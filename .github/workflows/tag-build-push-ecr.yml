@@ -230,7 +230,7 @@ jobs:
     - name: Terraform normal apply
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
-        cd ./terraform
+        
         terraform init
         terraform fmt -check
         terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
@@ -239,7 +239,7 @@ jobs:
     - name: Terraform dispatch apply
       if: github.event_name == 'workflow_dispatch'
       run: |
-        cd ./terraform
+        
         terraform init
         terraform fmt -check
         terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
