@@ -129,8 +129,8 @@ jobs:
         terraform init
         terraform fmt -check
         terraform plan 
-        terraform plan  -var="docker_image_tag=none" -target="module.ecr"
-        terraform apply -var="docker_image_tag=none" -target="module.ecr" -auto-approve
+        terraform plan  -var="docker_image_tag=none"  -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
+        terraform apply -var="docker_image_tag=none" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" -auto-approve
 
   deploy-image:
     needs: terraform-build-ecr 
