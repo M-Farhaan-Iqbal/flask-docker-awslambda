@@ -127,10 +127,10 @@ jobs:
       run: |
         echo $(pwd)
         echo $(ls -la)
-        terraform -chdir="/terraform" init
-        terraform -chdir="/terraform" fmt -check
-        terraform -chdir="/terraform" plan  -var="docker_image_tag=none"  -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
-        terraform -chdir="/terraform" apply -var="docker_image_tag=none" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" -auto-approve
+        terraform -chdir="./terraform" init
+        terraform -chdir="./terraform" fmt -check
+        terraform -chdir="./terraform" plan  -var="docker_image_tag=none"  -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
+        terraform -chdir="./terraform" apply -var="docker_image_tag=none" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" -auto-approve
 
   deploy-image:
     needs: terraform-build-ecr 
@@ -219,8 +219,17 @@ jobs:
     defaults:
       run:
         shell: bash
-
     steps:
+    - name: Checkout
+      if: github.event_name == 'push' || github.event_name == 'pull_request'
+      uses: actions/checkout@v3
+      
+    - name: Checkout if dispatch
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.refToBuild }}
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -233,20 +242,20 @@ jobs:
       run: |
         echo $(pwd)
         echo $(ls -la) 
-        terraform -chdir="/terraform" init
-        terraform -chdir="/terraform" fmt -check
-        terraform -chdir="/terraform" plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
-        terraform -chdir="/terraform" apply -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+        terraform -chdir="./terraform" init
+        terraform -chdir="./terraform" fmt -check
+        terraform -chdir="./terraform" plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
+        terraform -chdir="./terraform" apply -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
       
     - name: Terraform dispatch apply
       if: github.event_name == 'workflow_dispatch'
       run: |
         echo $(pwd)
         echo $(ls -la)         
-        terraform -chdir="/terraform" init
-        terraform -chdir="/terraform" fmt -check
-        terraform -chdir="/terraform" plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
-        terraform -chdir="/terraform" apply -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+        terraform -chdir="./terraform" init
+        terraform -chdir="./terraform" fmt -check
+        terraform -chdir="./terraform" plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
+        terraform -chdir="./terraform" apply -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
 
 
     
