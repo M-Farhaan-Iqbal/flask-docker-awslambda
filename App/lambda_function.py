@@ -73,7 +73,6 @@ def delete_item(id):
   db.session.commit()
   return "item deleted"
 
-
 @app.route('/')
 def helloroot():
     return jsonify(message='Hello from AWS Lambda using Python Flask in Docker!')
@@ -85,7 +84,9 @@ def hello():
 
 @app.route('/echo', methods=['POST'])
 def echo():
+    
     data = request.get_json()
+    logger.info('## echo in logs also %s ',data )
     return jsonify(data)
 
 
