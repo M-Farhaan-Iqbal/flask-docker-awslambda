@@ -125,7 +125,7 @@ jobs:
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: |
-        cd ./Infra
+        cd ./terraform
         terraform init
         terraform fmt -check
         terraform plan 
@@ -234,7 +234,7 @@ jobs:
     - name: Terraform normal apply
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
-        cd ./Infra
+        cd ./terraform
         terraform init
         terraform fmt -check
         terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars 
@@ -243,7 +243,7 @@ jobs:
     - name: Terraform dispatch apply
       if: github.event_name == 'workflow_dispatch'
       run: |
-        cd ./Infra
+        cd ./terraform
         terraform init
         terraform fmt -check
         terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars
