@@ -3,14 +3,14 @@ on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches:
-    - main
     - dev
     - sit
+    - prod
   pull_request:
     branches:
-    - main
     - dev
-    - sit    
+    - sit   
+    - prod 
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -20,11 +20,10 @@ on:
         required: true
         type: string
 
-name: AWS ECR push
+name: AWS ECR push and Terraform apply
 
 jobs:
 
-  
   check_appcode_changes:
     runs-on: ubuntu-latest
     outputs:
@@ -39,6 +38,7 @@ jobs:
         run: |
           # Get the list of modified files in the last commit
           echo "DirectoryChanges=false" >> "$GITHUB_OUTPUT"
+          # check current head modified files
           changed_files=$(git diff --no-commit-id --name-only -r ${{ github.sha }} | xargs)
           if echo "$changed_files" | grep -q "API-.*/"; then
             echo "There are modified api files in the commit."
@@ -51,7 +51,12 @@ jobs:
           echo "DirectoryChanges=true" >> "$GITHUB_OUTPUT"
           fi
 
-
+      # force rebuilding if manually checking out a commit
+      - name: Checkout if dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "DirectoryChanges=true" >> "$GITHUB_OUTPUT"
+        
   test-app:
     if: needs.check_appcode_changes.outputs.codeChangesfile == 'true'
     needs: check_appcode_changes
@@ -86,7 +91,6 @@ jobs:
         pip install -r requirements-test.txt
         python test_script.py
         
-
   terraform-build-ecr:
 
     if: ${{ always() }}
@@ -124,11 +128,15 @@ jobs:
         cd ./Infra
         terraform init
         terraform fmt -check
-        terraform plan -target="module.ecr"
-        terraform apply -target="module.ecr" -auto-approve
+        terraform plan 
+        terraform plan  -var="docker_image_tag=none" -target="module.ecr"
+        terraform apply -var="docker_image_tag=none" -target="module.ecr" -auto-approve
 
   deploy-image:
-    needs: terraform-build-ecr    
+    needs: terraform-build-ecr 
+    outputs:
+      currentDockerTag: ${{ steps.build-docker-tag.outputs.currentDockerTag }}   
+      latestDockerTag: ${{ steps.build-docker-tag.outputs.latestDockerTag }}
     name: Deploy image
     runs-on: ubuntu-latest
 
@@ -168,9 +176,12 @@ jobs:
         echo "IMAGE_TAG=${GITHUB_REF##*/}_$FIRST_7_CHARS" >> $GITHUB_ENV
 
     - name: Log Environment Variables
+      id : build-docker-tag
       run: |
         echo "Image Tag: $IMAGE_TAG"
         echo "Image Tag Latest: $IMAGE_TAG_LATEST"
+        echo "currentDockerTag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+        echo "latestDockerTag=$IMAGE_TAG_LATEST" >> "$GITHUB_OUTPUT"
 
     - name: Build the image
       id: build-image
@@ -213,16 +224,6 @@ jobs:
         shell: bash
 
     steps:
-    - name: Checkout
-      if: github.event_name == 'push' || github.event_name == 'pull_request'
-      uses: actions/checkout@v3
-      
-    - name: Checkout if dispatch
-      if: github.event_name == 'workflow_dispatch'
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ inputs.refToBuild }}
-
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -230,12 +231,23 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    - name: Terraform Init
+    - name: Terraform normal apply
+      if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
         cd ./Infra
         terraform init
         terraform fmt -check
-        terraform plan
-        terraform apply -auto-approve
+        terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars 
+        terraform apply -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+      
+    - name: Terraform dispatch apply
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        cd ./Infra
+        terraform init
+        terraform fmt -check
+        terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars
+        terraform apply -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+
+
     

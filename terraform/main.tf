@@ -22,22 +22,30 @@ provider "aws" {
   region = "us-east-1"
 }
 
+
 module "tf-state" {
   source      = "./modules/tf-state"
   bucket_name = "cc-tf-state-backend-ci-cd"
 }
 
-module "ecr-infra" {
+
+
+module "ecr" {
   source = "./modules/ecr"
 }
-
-module "lambda-infra" {
-  source = "./modules/lambdaApiCloudwatch"
+output "ecr_repo_url" {
+  value = module.ecr.ecr_repo_url
 }
 
+module "lambda_api_cloudwatch" {
+  source           = "./modules/lambdaApiCloudwatch"
+  docker_image_tag = var.docker_image_tag
+  ecr_repo_url     = module.ecr.ecr_repo_url
+  lambda_name      = var.lambda_name
 
-
-
-
-
-
+  db_username = var.db_username
+  db_password = var.db_password
+  db_host     = var.db_host
+  db_port     = var.db_port
+  db_name     = var.db_name
+}

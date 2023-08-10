@@ -1,4 +1,8 @@
 # Create an IAM role for Lambda with necessary permissions
+resource "aws_cloudwatch_log_group" "lambda_log_group" {
+  name = var.cloudwatch_log_group_name
+}
+
 resource "aws_iam_role" "lambda_role" {
   name = "lambda-role"
 
@@ -26,12 +30,6 @@ resource "aws_iam_policy_attachment" "lambda_policy_attachment" {
 }
 
 
-
-##
-#
-# AWS database instance
-#
-##
 locals {
   aws_db_instance__instance_class__free_tier = "db.t2.micro"
   aws_db_instance__allocated_storage__free_tier = "20"
@@ -50,10 +48,9 @@ resource "aws_db_instance" "postgres_db" {
   # The name of the RDS instance.
   # Letters and hyphens are allowed; underscores are not.
   # Terraform default is  a random, unique identifier.
-  identifier = "postgres-db-rds"
-
+  identifier = var.db_name
   # The name of the database to create when the DB instance is created.
-  name = "postgres_db_db"
+  name = var.db_name
 
   # The RDS instance class.
   # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
@@ -77,10 +74,11 @@ resource "aws_db_instance" "postgres_db" {
   #
   # These variables are set in the file .env.auto.tfvars
   # and you can see the example ffile .env.example.auto.tfvars.
-  username             = var.aws_db_instance__postgres_db__username
-  password             = var.aws_db_instance__postgres_db__password
+  username             = var.db_username
+  password             = var.db_password
 
   # We like to use the database with public tools such as DB admin apps.
+  skip_final_snapshot = "true"
   publicly_accessible = "true"
 
 }
@@ -107,21 +105,23 @@ output "db_instance_port" {
 
 # Create AWS Lambda function using the Docker image from ECR
 resource "aws_lambda_function" "my_lambda_function" {
-  function_name = "my-lambda-function"
+  function_name = var.lambda_name
   role          = aws_iam_role.lambda_role.arn
+  image_uri     = "${var.ecr_repo_url}:${var.docker_image_tag}"
+  package_type  = "Image"
 
-  image_uri = "204952858947.dkr.ecr.us-east-1.amazonaws.com/flask-app-crud:latest"
-  package_type = "Image"
-  
   environment {
     variables = {
       PGHOST     = aws_db_instance.postgres_db.address
       PGPORT     = aws_db_instance.postgres_db.port
       PGDATABASE = aws_db_instance.postgres_db.name
-      PGUSER     = aws_db_instance.postgres_db.username
-      PGPASSWORD = aws_db_instance.postgres_db.password
+      PGUSER     = var.db_username
+      PGPASSWORD = var.db_password
     }
   }
+    tracing_config {
+    mode = "Active"
+  }
+
+  depends_on = [aws_cloudwatch_log_group.lambda_log_group]
 }
-
-
