@@ -128,9 +128,8 @@ jobs:
         cd ./terraform
         terraform init
         terraform fmt -check
-        terraform plan 
-        terraform plan  -var="docker_image_tag=none"  -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
-        terraform apply -var="docker_image_tag=none" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" -auto-approve
+        terraform plan  -var="docker_image_tag=none"  -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
+        terraform apply -var="docker_image_tag=none" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" -auto-approve
 
   deploy-image:
     needs: terraform-build-ecr 
@@ -234,8 +233,8 @@ jobs:
         cd ./terraform
         terraform init
         terraform fmt -check
-        terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars 
-        terraform apply -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+        terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
+        terraform apply -var="docker_image_tag=${{needs.deploy-image.outputs.latestDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
       
     - name: Terraform dispatch apply
       if: github.event_name == 'workflow_dispatch'
@@ -243,8 +242,8 @@ jobs:
         cd ./terraform
         terraform init
         terraform fmt -check
-        terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars
-        terraform apply -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=terraform/environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+        terraform plan -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
+        terraform apply -var="docker_image_tag=${{needs.deploy-image.outputs.currentDockerTag}}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
 
 
     
