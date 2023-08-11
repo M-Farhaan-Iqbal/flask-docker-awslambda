@@ -85,8 +85,12 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
 
 
-    - name: Set up environment variables dispatch
-      id : build-docker-tag-dispatch
+    - name: Set up environment variables
+      run: |
+        echo "IMAGE_TAG=${GITHUB_REF##*/}_${GITHUB_SHA::7}" >> $GITHUB_ENV
+        echo "IMAGE_TAG_LATEST=latest_${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+    - name: Set up environment variables
       if: github.event_name == 'workflow_dispatch'
       run: |
         INPUT_REF_TO_BUILD=${{ inputs.refToBuild }}
@@ -94,13 +98,19 @@ jobs:
         echo "First 7 characters of ${{ inputs.refToBuild }} is  $FIRST_7_CHARS"
         echo "IMAGE_TAG=${GITHUB_REF##*/}_$FIRST_7_CHARS" >> $GITHUB_ENV
 
-    - name: Set up environment variables normal
-      id : build-docker-tag-normal
+    - name: Build the image latest push the latest image to Amazon ECR
       if: github.event_name == 'push' || github.event_name == 'pull_request'
+      id: build-image-latest
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
       run: |
-        echo "IMAGE_TAG=latest_${GITHUB_REF##*/}" >> $GITHUB_ENV
+        echo "building images..."
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST ./App/
+        echo "Tagged Image Tag: $IMAGE_TAG_LATEST will be pushed as automatically triggered"
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
 
-    - name: Build the image
+    - name: Build the image push the tagged image to Amazon ECR
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -108,15 +118,8 @@ jobs:
       run: |
         echo "building images..."
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./App/
-
-    - name: push the tagged image to Amazon ECR
-      id: push-tagged
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
-      run: |
-        echo "Tagged Image Tag: $IMAGE_TAG will be pushed as automatically triggered"
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "Tagged Image Tag: $IMAGE_TAG_LATEST will be pushed as automatically triggered"
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
 
     - name: apply image to lambda
       id: apply-image
