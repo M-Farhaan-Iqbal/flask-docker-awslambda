@@ -59,6 +59,7 @@ jobs:
 
   deploy-image:
     name: Deploy image
+    needs: test-app
     runs-on: ubuntu-latest
 
     steps:
