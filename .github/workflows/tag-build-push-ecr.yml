@@ -121,12 +121,17 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
-
+    - name: rename resources
+      run: |
+        github_ref="${GITHUB_REF##*/}"
+        sed -i 's/my_lambda_function/my_lambda_function_${github_ref}/g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 's/"postgres_db"/"postgres_db_${github_ref}"/g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 's\.postgres_db\./.postgres_db_${github_ref}.g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        
+        sed -i -e "s/\.postgres_db\./.postgres_db_${github_ref}\./" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: |
-        echo $(pwd)
-        echo $(ls -la)
         terraform -chdir="./terraform" init
         terraform -chdir="./terraform" fmt -check
         terraform -chdir="./terraform" plan  -var="docker_image_tag=none"  -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
@@ -236,12 +241,17 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
+    - name: rename resources
+      run: |
+        github_ref="${GITHUB_REF##*/}"
+
+        sed -i 's/my_lambda_function/my_lambda_function_${github_ref}/g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 's/"postgres_db"/"postgres_db_${github_ref}"/g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i 's\.postgres_db\./.postgres_db_${github_ref}.g' ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
 
     - name: Terraform normal apply
       if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
-        echo $(pwd)
-        echo $(ls -la) 
         terraform -chdir="./terraform" init
         terraform -chdir="./terraform" fmt -check
         terraform -chdir="./terraform" plan -var="docker_image_tag=latest_${GITHUB_REF##*/}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
@@ -249,13 +259,8 @@ jobs:
       
     - name: Terraform dispatch apply
       if: github.event_name == 'workflow_dispatch'
-      run: |
-        echo $(pwd)
-        echo $(ls -la)         
+      run: |      
         terraform -chdir="./terraform" init
         terraform -chdir="./terraform" fmt -check
         terraform -chdir="./terraform" plan -var="docker_image_tag=${GITHUB_REF##*/}_$FIRST_7_CHARS" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
         terraform -chdir="./terraform" apply -var="docker_image_tag=${GITHUB_REF##*/}_$FIRST_7_CHARS" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
-
-
-    
