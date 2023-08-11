@@ -23,43 +23,8 @@ on:
 name: AWS ECR push and Terraform apply
 
 jobs:
-
-  check_appcode_changes:
-    runs-on: ubuntu-latest
-    outputs:
-      codeChangesfile: ${{ steps.check_changes.outputs.DirectoryChanges }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Check for directory changes
-        id: check_changes
-        run: |
-          # Get the list of modified files in the last commit
-          echo "DirectoryChanges=false" >> "$GITHUB_OUTPUT"
-          # check current head modified files
-          changed_files=$(git diff --no-commit-id --name-only -r ${{ github.sha }} | xargs)
-          if echo "$changed_files" | grep -q "API-.*/"; then
-            echo "There are modified api files in the commit."
-            echo "DirectoryChanges=true" >> "$GITHUB_OUTPUT"
-          fi
-          
-          # Check if any modified file is in the specific directory
-          if echo "$changed_files" | grep -E grep "App/" >/dev/null; then
-          echo "There are modified application files in the commit."
-          echo "DirectoryChanges=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      # force rebuilding if manually checking out a commit
-      - name: Checkout if dispatch
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "DirectoryChanges=true" >> "$GITHUB_OUTPUT"
         
   test-app:
-    if: needs.check_appcode_changes.outputs.codeChangesfile == 'true'
-    needs: check_appcode_changes
     name: Test App
     runs-on: ubuntu-latest
 
@@ -91,57 +56,8 @@ jobs:
         pip install -r requirements-test.txt
         python test_script.py
         
-  terraform-build-ecr:
-
-    if: ${{ always() }}
-    needs: [check_appcode_changes,test-app]
-    name: 'Terraform build ecr'
-    runs-on: ubuntu-latest
-    # environment: production
-
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-    - name: Checkout
-      if: github.event_name == 'push' || github.event_name == 'pull_request'
-      uses: actions/checkout@v3
-      
-    - name: Checkout if dispatch
-      if: github.event_name == 'workflow_dispatch'
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ inputs.refToBuild }}
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-    - name: rename resources
-      run: |
-        github_ref="${GITHUB_REF##*/}"
-        sed -i "s/my_lambda_function/my_lambda_function_${github_ref}/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        sed -i "s/\"postgres_db\"/\"postgres_db_${github_ref}\"/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        sed -i "s#\.postgres_db\.#.postgres_db_${github_ref}.#g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        
-
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    - name: Terraform Init
-      run: |
-        terraform -chdir="./terraform" init
-        terraform -chdir="./terraform" fmt -check
-        terraform -chdir="./terraform" plan  -var="docker_image_tag=none"  -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" 
-        terraform -chdir="./terraform" apply -var="docker_image_tag=none" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars -target="module.ecr" -auto-approve
 
   deploy-image:
-    needs: terraform-build-ecr 
-    outputs:
-      currentDockerTag: ${{ steps.build-docker-tag.outputs.currentDockerTag }}   
-      latestDockerTag: ${{ steps.build-docker-tag.outputs.latestDockerTag }}
     name: Deploy image
     runs-on: ubuntu-latest
 
@@ -167,12 +83,9 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Set up environment variables
-      run: |
-        echo "IMAGE_TAG=${GITHUB_REF##*/}_${GITHUB_SHA::7}" >> $GITHUB_ENV
-        echo "IMAGE_TAG_LATEST=latest_${GITHUB_REF##*/}" >> $GITHUB_ENV
 
-    - name: Set up environment variables
+    - name: Set up environment variables dispatch
+      id : build-docker-tag-dispatch
       if: github.event_name == 'workflow_dispatch'
       run: |
         INPUT_REF_TO_BUILD=${{ inputs.refToBuild }}
@@ -180,13 +93,11 @@ jobs:
         echo "First 7 characters of ${{ inputs.refToBuild }} is  $FIRST_7_CHARS"
         echo "IMAGE_TAG=${GITHUB_REF##*/}_$FIRST_7_CHARS" >> $GITHUB_ENV
 
-    - name: Log Environment Variables
-      id : build-docker-tag
+    - name: Set up environment variables normal
+      id : build-docker-tag-normal
+      if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
-        echo "Image Tag: $IMAGE_TAG"
-        echo "Image Tag Latest: $IMAGE_TAG_LATEST"
-        echo "currentDockerTag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-        echo "latestDockerTag=$IMAGE_TAG_LATEST" >> "$GITHUB_OUTPUT"
+        echo "IMAGE_TAG=latest_${GITHUB_REF##*/}" >> $GITHUB_ENV
 
     - name: Build the image
       id: build-image
@@ -196,6 +107,7 @@ jobs:
       run: |
         echo "building images..."
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./App/
+
     - name: push the tagged image to Amazon ECR
       id: push-tagged
       env:
@@ -205,62 +117,12 @@ jobs:
         echo "Tagged Image Tag: $IMAGE_TAG will be pushed as automatically triggered"
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: push the latest image to Amazon ECR
-      id: push-latest
+    - name: apply image to lambda
+      id: apply-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
-      if: github.event_name == 'push' || github.event_name == 'pull_request'
       run: |
-        echo "latest Image Tag: $IMAGE_TAG_LATEST will be pushed as automatically triggered "
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST ./App/
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
-
-  terraform-build-lambda:
-    if : ${{ always() }}
-    needs: deploy-image
-    name: 'Terraform build lambda'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-    - name: Checkout
-      if: github.event_name == 'push' || github.event_name == 'pull_request'
-      uses: actions/checkout@v3
-      
-    - name: Checkout if dispatch
-      if: github.event_name == 'workflow_dispatch'
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ inputs.refToBuild }}
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-    - name: rename resources
-      run: |
-        github_ref="${GITHUB_REF##*/}"
-
-        sed -i "s/my_lambda_function/my_lambda_function_${github_ref}/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        sed -i "s/\"postgres_db\"/\"postgres_db_${github_ref}\"/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        sed -i "s#\.postgres_db\.#.postgres_db_${github_ref}.#g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-
-    - name: Terraform normal apply
-      if: github.event_name == 'push' || github.event_name == 'pull_request'
-      run: |
-        terraform -chdir="./terraform" init
-        terraform -chdir="./terraform" fmt -check
-        terraform -chdir="./terraform" plan -var="docker_image_tag=latest_${GITHUB_REF##*/}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars 
-        terraform -chdir="./terraform" apply -var="docker_image_tag=latest_${GITHUB_REF##*/}" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
-      
-    - name: Terraform dispatch apply
-      if: github.event_name == 'workflow_dispatch'
-      run: |      
-        terraform -chdir="./terraform" init
-        terraform -chdir="./terraform" fmt -check
-        terraform -chdir="./terraform" plan -var="docker_image_tag=${GITHUB_REF##*/}_$FIRST_7_CHARS" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars
-        terraform -chdir="./terraform" apply -var="docker_image_tag=${GITHUB_REF##*/}_$FIRST_7_CHARS" -var-file=./environments/${GITHUB_REF##*/}/main.tfvars --auto-approve
+        LAMBDA_FUNCTION_NAME="my_lambda_function_${GITHUB_REF##*/}"
+        IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        aws lambda update-function-code --function-name "$LAMBDA_FUNCTION_NAME" --image-uri "$IMAGE_URI"

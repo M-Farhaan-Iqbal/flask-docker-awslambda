@@ -1,5 +1,0 @@
-lambda_name = "flaskApiDev"
-db_username = "dev_postgres"
-db_name = "devpostgresrds"
-db_password = "dev_password"
-cloudwatch_log_group_name = "devcloudwatch-log-group"
