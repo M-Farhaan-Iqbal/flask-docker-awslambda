@@ -13,6 +13,7 @@ import sys
 app = Flask(__name__)
 
 
+
 # rebuilding from environment variables
 dburl = "postgresql://"+ os.environ.get('PGUSER') + ":" + os.environ.get('PGPASSWORD') + "@" + os.environ.get('PGHOST') +  ":" + os.environ.get('PGPORT') + "/" +  os.environ.get('PGDATABASE')
 
