@@ -125,7 +125,7 @@ jobs:
       run: |
         github_ref="${GITHUB_REF##*/}"
         sed -i "s/my_lambda_function/my_lambda_function_${github_ref}/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        sed -i "s#\"postgres_db\"#\"postgres_db_${github_ref}#"/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i "s/\"postgres_db\"/\"postgres_db_${github_ref}\"/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
         sed -i "s#\.postgres_db\.#.postgres_db_${github_ref}.#g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
         
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
@@ -244,7 +244,7 @@ jobs:
       run: |
         github_ref="${GITHUB_REF##*/}"
         sed -i "s/my_lambda_function/my_lambda_function_${github_ref}/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
-        sed -i "s#\"postgres_db\"#\"postgres_db_${github_ref}#"/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
+        sed -i "s/\"postgres_db\"/\"postgres_db_${github_ref}\"/g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
         sed -i "s#\.postgres_db\.#.postgres_db_${github_ref}.#g" ./terraform/modules/lambdaApiCloudwatch/lambdaApiCloudwatch.tf
 
     - name: Terraform normal apply
