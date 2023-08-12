@@ -51,6 +51,9 @@ def get_items():
 @app.route('/items', methods=['POST'])
 def create_item():
     body = request.get_json()
+    existing_item = Item.query.filter_by(title=body['title']).first()
+    if existing_item:
+        return jsonify(message='Item already exists'), 409  # Return conflict status
     new_item = Item(body['title'], body['content'])
     db.session.add(new_item)
     db.session.commit()
