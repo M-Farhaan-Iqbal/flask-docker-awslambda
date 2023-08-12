@@ -17,37 +17,37 @@
         }
     },
     {
-        "name": "Get Item API Test",
-        "path": "/items",
+        "name": "Get health test",
+        "path": "/health",
         "data": {
             "httpMethod": "GET",
             "headers": {
                 "Content-Type": "application/json"
             },
             "queryStringParameters": {},
-            "path": "/items",
+            "path": "/health",
             "body": "{}"
         },
         "expected_response": {
             "statusCode": "200",
-            "body": "{\"statusCode\": \"200\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"3\"}, \"isBase64Encoded\": false, \"body\": \"[]\\n\"}"
+            "body": "{\"statusCode\": \"200\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"26\"}, \"isBase64Encoded\": false, \"body\": \"{\\\"message\\\":\\\"health okay\\\"}\\n\"}"
         }
     },
     {
-        "name": "Get Item API Test ",
-        "path": "/items",
+        "name": "Get echo ",
+        "path": "/echo",
         "data": {
-            "httpMethod": "GET",
+            "httpMethod": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
             "queryStringParameters": {},
-            "path": "/items",
-            "body": "{}"
+            "path": "/echo",
+            "body": "{\"message\" :\" echo okay\"}"
         },
         "expected_response": {
             "statusCode": "200",
-            "body": "{\"statusCode\": \"200\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"3\"}, \"isBase64Encoded\": false, \"body\": \"[]\\n\"}"
+            "body": "{\"statusCode\": \"200\", \"headers\": {\"Content-Type\": \"application/json\", \"Content-Length\": \"25\"}, \"isBase64Encoded\": false, \"body\": \"{\\\"message\\\":\\\" echo okay\\\"}\\n\"}"
         }
     }
 ]
