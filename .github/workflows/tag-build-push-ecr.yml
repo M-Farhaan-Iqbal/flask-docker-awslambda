@@ -42,12 +42,14 @@ jobs:
 
 
     - name: Build the image
+      if: github.event_name == 'push' || github.event_name == 'pull_request'
       id: build-image
       run: |
         echo "building images..."
         docker build -t flask-docker-awslambda ./App/
 
     - name: run the test env and test
+      if: github.event_name == 'push' || github.event_name == 'pull_request'
       id: run-compose
       run: |
         echo "testing built image..."
