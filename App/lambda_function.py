@@ -44,10 +44,13 @@ def item_to_dict(item):
 # CRUD Endpoints
 @app.route('/items/<int:id>', methods=['GET'])
 def get_item(id):
-    item = Item.query.get(id)
-    if item is None:
-        return jsonify(message='Item not found'), 404
-    return jsonify(item_to_dict(item))
+    try:
+        item = Item.query.get(id)
+        if item is None:
+            return jsonify(message='Item not found'), 404
+        return jsonify(item_to_dict(item))
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 
 @app.route('/items', methods=['GET'])
 def get_items():
