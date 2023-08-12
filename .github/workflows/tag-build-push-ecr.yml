@@ -99,17 +99,6 @@ jobs:
         FIRST_7_CHARS=${INPUT_REF_TO_BUILD:0:7}
         echo "First 7 characters of ${{ inputs.refToBuild }} is  $FIRST_7_CHARS"
         echo "IMAGE_TAG=${GITHUB_REF##*/}_$FIRST_7_CHARS" >> $GITHUB_ENV
-    - name: Build the image push the tagged image to Amazon ECR
-
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
-      run: |
-        echo "building images..."
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./App/
-        echo "Tagged Image Tag: $IMAGE_TAG will be pushed as automatically triggered"
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: Build the image latest push the latest image to Amazon ECR
       if: github.event_name == 'push' || github.event_name == 'pull_request'
@@ -122,7 +111,17 @@ jobs:
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
 
+    - name: Build the image push the tagged image to Amazon ECR
 
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
+      run: |
+        echo "building images..."
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./App/
+        echo "Tagged Image Tag: $IMAGE_TAG will be pushed as automatically triggered"
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: apply image to lambda
       id: apply-image
